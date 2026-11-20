@@ -2,7 +2,8 @@
 <html lang="sk">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070707">
 <title>the cut. | Barber Petržalka</title>
 <meta name="description" content="the cut. — barber od 2024. Ovsištské Námestie 1, Bratislava-Petržalka. Pánsky strih, fade, brada.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -142,12 +143,53 @@
   footer { position:relative; z-index:1; border-top:1px solid var(--line); padding:34px clamp(16px,6vw,96px); display:flex; flex-wrap:wrap; justify-content:space-between; gap:16px; color:var(--muted); font-size:13px; line-height:1.7; background:var(--bg); }
   .reveal { opacity:0; transform:translateY(40px); }
 
+  /* Phone UI: burger, menu sheet, sticky booking bar, price thumbs */
+  .burger { display:none; width:44px; height:44px; place-items:center; background:none; border:0; color:#fff; cursor:pointer; margin-right:-10px; }
+  .burger span { display:block; width:24px; height:2px; background:currentColor; border-radius:2px; transition:transform .45s cubic-bezier(.7,0,.2,1); }
+  .burger span + span { margin-top:6px; }
+  .burger[aria-expanded="true"] span:first-child { transform:translateY(4px) rotate(45deg); }
+  .burger[aria-expanded="true"] span:last-child { transform:translateY(-4px) rotate(-45deg); }
+  #menu { position:fixed; inset:0; z-index:19; background:rgba(7,7,7,.94); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+          display:flex; flex-direction:column; justify-content:center; padding:0 28px; gap:6px; clip-path:circle(0 at calc(100% - 38px) 38px); visibility:hidden;
+          transition:clip-path .7s cubic-bezier(.7,0,.2,1), visibility 0s .7s; }
+  #menu.open { clip-path:circle(150% at calc(100% - 38px) 38px); visibility:visible; transition:clip-path .7s cubic-bezier(.7,0,.2,1); }
+  #menu a.m { font-size:clamp(44px,13vw,64px); font-weight:600; letter-spacing:-.04em; text-decoration:none; line-height:1.15; }
+  #menu .btn { margin-top:28px; align-self:flex-start; }
+  #menu .meta { margin-top:34px; color:var(--muted); font-size:15px; line-height:1.7; }
+  .book-bar { display:none; position:fixed; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom)); z-index:25; gap:10px;
+              transform:translateY(160%); transition:transform .55s cubic-bezier(.2,.9,.2,1); }
+  .book-bar.show { transform:none; }
+  .book-bar .btn { flex:1; justify-content:center; padding:17px 20px; }
+  .book-bar .call { width:56px; flex:none; display:grid; place-items:center; border-radius:999px; color:var(--fg);
+                    background:rgba(20,20,20,.7); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:inset 0 0 0 1px rgba(255,255,255,.18); }
+  .thumb { display:none; width:58px; height:58px; border-radius:14px; object-fit:cover; }
+
   @media (max-width:820px) {
-    nav .links a:not(.cta-nav) { display:none; }
-    .cards { grid-template-columns:1fr; }
-    .card { aspect-ratio:4/4.6; }
-    .contact .grid { grid-template-columns:1fr; }
-    .strip figure { height:52vh; }
+    nav .links { display:none; }
+    .burger { display:grid; }
+    .book-bar { display:flex; }
+    footer { padding-bottom:calc(96px + env(safe-area-inset-bottom)); }
+    .hero h1 { font-size:clamp(76px,25vw,130px); }
+    .hero .row { margin-top:20px; }
+    .hero .row .btn { width:100%; justify-content:center; }
+    h2 { margin-bottom:32px; }
+    .prices, .team { padding-block:10vh; }
+    .price-list li { grid-template-columns:58px 1fr auto; gap:14px; padding:16px 0; align-items:center; }
+    .price-list .thumb { display:block; }
+    .price-list .name { font-size:24px; }
+    .price-list .name small { font-size:13px; }
+    .price-list .val { font-size:24px; }
+    .price-list li:hover .name { transform:none; }
+    .cards { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; gap:12px; perspective:none;
+             margin-inline:calc(-1 * clamp(16px,6vw,96px)); padding:0 clamp(16px,6vw,96px) 6px; scrollbar-width:none; }
+    .cards::-webkit-scrollbar { display:none; }
+    .card { flex:0 0 78vw; scroll-snap-align:center; aspect-ratio:3/4.1; }
+    .card img { filter:none; }
+    .card .soc a { width:44px; height:44px; }
+    .contact .grid { grid-template-columns:1fr; gap:40px; }
+    .big-link { font-size:clamp(28px,8.5vw,40px); }
+    .strip figure { height:50vh; }
+    .final { padding-block:12vh 10vh; }
   }
   @media (prefers-reduced-motion:reduce) {
     .reveal { opacity:1; transform:none; }
@@ -165,7 +207,17 @@
 <nav>
   <a class="logo" href="#top">the cut.</a>
   <div class="links"><a href="#cennik">cenník.</a><a href="#barberi">naši barberi.</a><a href="#galeria">galéria.</a><a href="#kontakt" class="cta-nav">kontakt.</a></div>
+  <button class="burger" aria-label="Menu" aria-expanded="false" aria-controls="menu"><span></span><span></span></button>
 </nav>
+<div id="menu" aria-label="Menu">
+  <a class="m" href="#cennik">cenník.</a><a class="m" href="#barberi">naši barberi.</a><a class="m" href="#galeria">galéria.</a><a class="m" href="#kontakt">kontakt.</a>
+  <a class="btn" href="https://aponea.com/sk/venue/petrzalka/holicstvo/2/the-cut-barber" target="_blank" rel="noopener"><i></i>Rezervuj si termín</a>
+  <div class="meta">Ovsištské Námestie 1, Petržalka<br>Po–Pi 9:00–20:00 · <a href="tel:+421910910410">+421 910 910 410</a></div>
+</div>
+<div class="book-bar">
+  <a class="btn" href="https://aponea.com/sk/venue/petrzalka/holicstvo/2/the-cut-barber" target="_blank" rel="noopener"><i></i>Rezervuj si termín</a>
+  <a class="call" href="tel:+421910910410" aria-label="Zavolať +421 910 910 410"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></a>
+</div>
 
 <main id="top">
   <section class="hero wrap">
@@ -187,11 +239,11 @@
     <h2 class="lines"><span class="line"><span>cenník<span class="serif">.</span></span></span></h2>
     <div class="hover-img" aria-hidden="true"><img src="img/g02.jpg" alt=""></div>
     <ul class="price-list">
-      <li class="reveal" data-img="img/g02.jpg"><span class="name">pánsky strih.<small>strih, umytie, styling</small></span><span class="val">25€</span></li>
-      <li class="reveal" data-img="img/g04.jpg"><span class="name">fade.<small>skin / low / mid / high</small></span><span class="val">20€</span></li>
-      <li class="reveal" data-img="img/g08.jpg"><span class="name">brada.<small>úprava, kontúry, hot towel</small></span><span class="val"><sub>od</sub>15€</span></li>
-      <li class="reveal" data-img="img/g07.jpg"><span class="name">combo.<small>strih + brada</small></span><span class="val"><sub>od</sub>35€</span></li>
-      <li class="reveal" data-img="img/g06.jpg"><span class="name">detský strih.<small>pre malých gentlemanov</small></span><span class="val">20€</span></li>
+      <li class="reveal" data-img="img/g02.jpg"><img class="thumb" src="img/g02.jpg" alt="" loading="lazy"><span class="name">pánsky strih.<small>strih, umytie, styling</small></span><span class="val">25€</span></li>
+      <li class="reveal" data-img="img/g04.jpg"><img class="thumb" src="img/g04.jpg" alt="" loading="lazy"><span class="name">fade.<small>skin / low / mid / high</small></span><span class="val">20€</span></li>
+      <li class="reveal" data-img="img/g08.jpg"><img class="thumb" src="img/g08.jpg" alt="" loading="lazy"><span class="name">brada.<small>úprava, kontúry, hot towel</small></span><span class="val"><sub>od</sub>15€</span></li>
+      <li class="reveal" data-img="img/g07.jpg"><img class="thumb" src="img/g07.jpg" alt="" loading="lazy"><span class="name">combo.<small>strih + brada</small></span><span class="val"><sub>od</sub>35€</span></li>
+      <li class="reveal" data-img="img/g06.jpg"><img class="thumb" src="img/g06.jpg" alt="" loading="lazy"><span class="name">detský strih.<small>pre malých gentlemanov</small></span><span class="val">20€</span></li>
     </ul>
   </section>
 
@@ -275,7 +327,6 @@
 </script>
 <script type="module">
 import * as THREE from "three";
-import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
 gsap.registerPlugin(ScrollTrigger);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -321,46 +372,78 @@ h1.innerHTML = [...h1.textContent].map(c => `<span class="ch" aria-hidden="true"
 
 // ---------- Three.js ----------
 const renderer = new THREE.WebGLRenderer({ canvas: $("#gl"), antialias: true, alpha: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, mobile() ? 1.75 : 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 const scene = new THREE.Scene();
-scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+// Studio environment: dark room with softbox strips, so chrome and glass get long clean highlights.
+{
+  const env = new THREE.Scene();
+  env.background = new THREE.Color(0x262626);
+  const box = (w, h, color, x, y, z) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide }));
+    m.position.set(x, y, z); m.lookAt(0, 0, 0); env.add(m); };
+  box(1.2, 9, new THREE.Color(5, 5, 5), -5, 0, 2);       // left strip
+  box(0.8, 9, new THREE.Color(3.5, 3.5, 3.5), 5, 0, 1);  // right strip
+  box(6, 3, new THREE.Color(2.5, 2.5, 2.5), 0, 6, 0);    // top softbox
+  box(3, 6, new THREE.Color(3, 0.35, 0.35), 4, 0, -5);   // red rim
+  box(3, 6, new THREE.Color(0.35, 0.5, 3.2), -4, 0, -5); // blue rim
+  box(10, 2, new THREE.Color(0.6, 0.6, 0.6), 0, -5, 3);  // floor bounce
+  box(3, 4, new THREE.Color(1.1, 1.1, 1.1), 2.5, 1, 7);    // front fill (what the camera side reflects)
+  const pm = new THREE.PMREMGenerator(renderer);
+  scene.environment = pm.fromScene(env, 0.02).texture;
+  pm.dispose();
+}
 const camera = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.1, 100);
 const camZ = () => Math.max(9, 7 / (innerWidth / innerHeight));
 camera.position.set(0, 0, camZ());
-const keyL = new THREE.DirectionalLight(0xffffff, 2); keyL.position.set(3, 5, 6); scene.add(keyL);
-const redL = new THREE.PointLight(0xff3333, 30, 20); redL.position.set(3, 1, 3); scene.add(redL);
-const blueL = new THREE.PointLight(0x3366ff, 30, 20); blueL.position.set(-3, -1, 3); scene.add(blueL);
+const keyL = new THREE.DirectionalLight(0xffffff, 1.2); keyL.position.set(3, 5, 6); scene.add(keyL);
+const redL = new THREE.PointLight(0xff3333, 18, 20); redL.position.set(3, 1, 3); scene.add(redL);
+const blueL = new THREE.PointLight(0x3366ff, 18, 20); blueL.position.set(-3, -1, 3); scene.add(blueL);
 
-const chrome = new THREE.MeshPhysicalMaterial({ color: 0xffffff, metalness: 1, roughness: 0.12, clearcoat: 1 });
+const chrome = new THREE.MeshPhysicalMaterial({ color: 0xf2f2f2, metalness: 1, roughness: 0.08, clearcoat: 1, clearcoatRoughness: 0.05 });
 
-// Barber pole: striped core inside a glass tube, chrome caps.
+// Barber pole: lit striped core, real glass tube, lathe-turned chrome caps and finial.
 function makePole() {
-  const c = document.createElement("canvas"); c.width = 256; c.height = 256;
+  // Stripe texture: crisp diagonal bands that tile seamlessly (u wraps round the pole, v runs along it).
+  const S = 1024, c = document.createElement("canvas"); c.width = c.height = S;
   const g = c.getContext("2d");
-  g.fillStyle = "#f4f1ea"; g.fillRect(0, 0, 256, 256);
-  const band = (color, off) => { g.fillStyle = color; g.beginPath();
-    for (let k = -2; k < 3; k++) { const o = k * 256 + off; g.moveTo(o, 256); g.lineTo(o + 64, 256); g.lineTo(o + 64 + 256, 0); g.lineTo(o + 256, 0); } g.fill(); };
-  band("#d62828", 0); band("#1f3fbf", 128);
+  g.fillStyle = "#f6f2ea"; g.fillRect(0, 0, S, S);
+  const band = (color, off, w) => { g.fillStyle = color; g.beginPath();
+    for (let k = -2; k <= 2; k++) { const o = k * S + off; g.moveTo(o, S); g.lineTo(o + w, S); g.lineTo(o + w + S, 0); g.lineTo(o + S, 0); g.closePath(); } g.fill(); };
+  band("#c4161c", 0, S * 0.26);
+  band("#16308f", S * 0.5, S * 0.26);
   const stripes = new THREE.CanvasTexture(c);
-  stripes.colorSpace = THREE.SRGBColorSpace; stripes.wrapS = stripes.wrapT = THREE.RepeatWrapping; stripes.repeat.set(1, 2.5);
+  stripes.colorSpace = THREE.SRGBColorSpace; stripes.wrapS = stripes.wrapT = THREE.RepeatWrapping;
+  stripes.repeat.set(1, 2.2); stripes.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
   const pole = new THREE.Group();
-  const core = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 3.2, 64, 1, true), new THREE.MeshStandardMaterial({ map: stripes, roughness: 0.3, emissive: 0xffffff, emissiveMap: stripes, emissiveIntensity: 0.35 }));
-  const glass = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 3.25, 64, 1, true),
-    new THREE.MeshPhysicalMaterial({ transmission: 1, roughness: 0.04, thickness: 0.4, ior: 1.45, clearcoat: 1, transparent: true, side: THREE.DoubleSide }));
-  const cap = y => { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.66, 0.66, 0.28, 64), chrome); m.position.y = y; return m; };
-  const ring = y => { const m = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.05, 16, 64), chrome); m.rotation.x = Math.PI / 2; m.position.y = y; return m; };
-  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.42, 48, 32), chrome); ball.position.y = 2.15;
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.32, 0.4, 32), chrome); neck.position.y = 1.86;
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 0.35, 48), chrome); base.position.y = -1.95;
-  pole.add(core, glass, cap(1.72), cap(-1.72), ring(1.54), ring(-1.54), ball, neck, base);
+  const L = 3.0, R = 0.5; // glass length / radius
+  const core = new THREE.Mesh(new THREE.CylinderGeometry(R * 0.82, R * 0.82, L, 96, 1, true),
+    new THREE.MeshPhysicalMaterial({ map: stripes, roughness: 0.38, sheen: 0.4, emissive: 0xffffff, emissiveMap: stripes, emissiveIntensity: 0.55 }));
+  const glass = new THREE.Mesh(new THREE.CylinderGeometry(R, R, L, 96, 1, true),
+    new THREE.MeshPhysicalMaterial({ transmission: 1, thickness: 0.25, roughness: 0, ior: 1.5, metalness: 0, clearcoat: 1, specularIntensity: 1, envMapIntensity: 0.9 }));
+  // Turned-metal profiles (x = radius, y = height), listed bottom-up so normals face out.
+  const lathe = pts => new THREE.Mesh(new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), 96), chrome);
+  const top = lathe([[R + 0.02, 0], [R + 0.1, 0.02], [R + 0.13, 0.06], [R + 0.13, 0.14], [R + 0.09, 0.17], [R + 0.09, 0.21], [R + 0.14, 0.24],
+    [R + 0.14, 0.31], [R + 0.08, 0.36], [0.34, 0.41], [0.2, 0.47], [0.13, 0.55], [0.11, 0.64], [0.16, 0.69], [0.1, 0.74], [0.001, 0.75]]);
+  top.position.y = L / 2;
+  const bottom = lathe([[0.001, -0.98], [0.07, -0.97], [0.1, -0.9], [0.13, -0.78], [0.2, -0.62], [0.3, -0.48], [R + 0.06, -0.36], [R + 0.14, -0.31],
+    [R + 0.14, -0.24], [R + 0.09, -0.21], [R + 0.09, -0.17], [R + 0.13, -0.14], [R + 0.13, -0.06], [R + 0.1, -0.02], [R + 0.02, 0]]);
+  bottom.position.y = -L / 2;
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.3, 64, 48), chrome); ball.position.y = L / 2 + 1.0;
+  // Soft halo behind the pole, as if it were lit from inside.
+  const hc = document.createElement("canvas"); hc.width = hc.height = 256;
+  const hg = hc.getContext("2d"), grd = hg.createRadialGradient(128, 128, 0, 128, 128, 128);
+  grd.addColorStop(0, "rgba(255,255,255,.55)"); grd.addColorStop(0.35, "rgba(255,90,90,.18)"); grd.addColorStop(0.7, "rgba(60,90,255,.08)"); grd.addColorStop(1, "rgba(0,0,0,0)");
+  hg.fillStyle = grd; hg.fillRect(0, 0, 256, 256);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(hc), blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.8 }));
+  halo.scale.set(4.2, 6.2, 1);
+  pole.add(halo, core, glass, top, bottom, ball);
   pole.userData.stripes = stripes;
   return pole;
 }
-
 const pole = makePole();
-pole.scale.setScalar(0.62);
+pole.scale.setScalar(0.66);
 const rig = new THREE.Group(); rig.add(pole); scene.add(rig);
 
 // ---------- Scroll choreography: one master timeline in scroll pixels ----------
@@ -468,6 +551,14 @@ if (matchMedia("(hover: hover)").matches && !reduced) {
     ], { duration: life, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards" }).onfinish = () => im.remove();
   });
 })($(".final"), Array.from({ length: 12 }, (_, i) => `img/g${String(i + 1).padStart(2, "0")}.jpg`));
+
+// ---------- Phone: menu + sticky booking bar ----------
+const burger = $(".burger"), menu = $("#menu");
+const setMenu = open => { menu.classList.toggle("open", open); burger.setAttribute("aria-expanded", String(open)); lenis && (open ? lenis.stop() : lenis.start()); };
+burger.addEventListener("click", () => setMenu(!menu.classList.contains("open")));
+$$("#menu a").forEach(a => a.addEventListener("click", () => setMenu(false)));
+addEventListener("keydown", e => e.key === "Escape" && setMenu(false));
+ScrollTrigger.create({ trigger: ".marquee", start: "top bottom", endTrigger: ".final", end: "top 70%", toggleClass: { targets: ".book-bar", className: "show" } });
 
 // ---------- Render loop ----------
 const mouse = { x: 0, y: 0 };
