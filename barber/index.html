@@ -16,10 +16,19 @@
   canvas#gl { position:fixed; inset:0; width:100vw; height:100vh; z-index:0; pointer-events:none; }
   .grain { position:fixed; inset:0; z-index:50; pointer-events:none; opacity:.07; mix-blend-mode:overlay;
            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-  .glow { position:fixed; inset:0; z-index:-1; background:
-          radial-gradient(40vmax 30vmax at 80% 30%, rgba(226,58,58,.16), transparent 70%),
-          radial-gradient(40vmax 30vmax at 15% 80%, rgba(47,91,255,.14), transparent 70%), var(--bg); }
-  .serif { font-family:"Instrument Serif", serif; font-style:italic; font-weight:400; letter-spacing:0; }
+  .glow { position:fixed; inset:0; z-index:-1; background:var(--bg); overflow:hidden; }
+  /* Pole-colour aurora: three blurred blobs drifting slowly. */
+  .glow i { position:absolute; width:60vmax; height:60vmax; border-radius:50%; filter:blur(80px); opacity:.32; animation:drift 26s ease-in-out infinite alternate; }
+  .glow i:nth-child(1) { background:radial-gradient(circle,#e23a3a,transparent 65%); right:-15vmax; top:-15vmax; }
+  .glow i:nth-child(2) { background:radial-gradient(circle,#2f5bff,transparent 65%); left:-20vmax; bottom:-25vmax; animation-duration:32s; animation-delay:-10s; }
+  .glow i:nth-child(3) { background:radial-gradient(circle,#8a3cff,transparent 65%); left:30%; top:35%; opacity:.18; animation-duration:38s; animation-delay:-20s; }
+  @keyframes drift { to { transform:translate(-14vmax,10vmax) scale(1.2); } }
+  .serif { font-family:"Instrument Serif", serif; font-style:italic; font-weight:400; letter-spacing:0; padding-right:.06em;
+           background:linear-gradient(100deg,#ff5a5a,#f2efe9 35%,#ffd9d9 50%,#6f8cff 70%,#ff5a5a); background-size:250% 100%;
+           -webkit-background-clip:text; background-clip:text; color:transparent; animation:sheen 7s linear infinite; }
+  @keyframes sheen { to { background-position:-250% 0; } }
+  .hero h1 .ch:last-child { background:linear-gradient(160deg,#ff4d4d 72%,#2f5bff 88%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .btn { box-shadow:-14px 6px 34px -8px rgba(226,58,58,.55), 14px 6px 34px -8px rgba(47,91,255,.6); }
 
   /* Intro curtain */
   #intro { position:fixed; inset:0; z-index:60; background:var(--fg); color:var(--bg); display:grid; place-items:center; }
@@ -52,7 +61,7 @@
   .hero .row { display:flex; justify-content:space-between; align-items:flex-end; gap:24px; flex-wrap:wrap; margin-top:28px; }
   .hero p { max-width:420px; color:var(--muted); font-size:clamp(17px,1.5vw,20px); line-height:1.5; }
   .hero p b { color:var(--fg); font-weight:500; }
-  .status { display:inline-flex; align-items:center; gap:10px; font-size:14px; letter-spacing:.04em; padding:8px 14px; border-radius:99px; box-shadow:inset 0 0 0 1px var(--line); margin-bottom:22px; }
+  .status { align-self:flex-start; display:inline-flex; align-items:center; gap:10px; font-size:14px; letter-spacing:.04em; padding:8px 14px; border-radius:99px; box-shadow:inset 0 0 0 1px var(--line); margin-bottom:22px; }
   .status i { width:8px; height:8px; border-radius:50%; background:#777; }
   .status.open i { background:#3ddc84; box-shadow:0 0 0 0 rgba(61,220,132,.6); animation:ping 2s infinite; }
   @keyframes ping { 70% { box-shadow:0 0 0 10px rgba(61,220,132,0); } 100% { box-shadow:0 0 0 0 rgba(61,220,132,0); } }
@@ -62,7 +71,8 @@
   .marquee .track { display:flex; width:max-content; animation:mq 26s linear infinite; }
   .marquee span { font-size:clamp(48px,8vw,120px); font-weight:600; letter-spacing:-.03em; padding-right:.4em; white-space:nowrap; }
   .marquee span:nth-child(even) { color:transparent; -webkit-text-stroke:1px var(--fg); }
-  .marquee span em { color:var(--red); font-style:normal; }
+  .marquee span em { font-style:normal; background:linear-gradient(180deg,#ff4d4d,#2f5bff); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .price-list li { border-image:linear-gradient(90deg,rgba(226,58,58,.5),rgba(242,239,233,.12) 40%,rgba(47,91,255,.4)) 1; }
   @keyframes mq { to { transform:translateX(-50%); } }
 
   /* Prices */
@@ -77,6 +87,15 @@
   .price-list .name small { display:block; font-size:14px; letter-spacing:.05em; color:var(--muted); font-weight:400; margin-top:4px; }
   .price-list .val { font-size:clamp(26px,3.2vw,44px); font-weight:300; font-variant-numeric:tabular-nums; position:relative; }
   .price-list .val sub { font-size:.45em; vertical-align:baseline; color:var(--muted); margin-right:6px; }
+
+  .hover-img { position:fixed; left:0; top:0; width:clamp(200px,18vw,280px); aspect-ratio:3/4; border-radius:18px; overflow:hidden; z-index:5; pointer-events:none; opacity:0; box-shadow:0 30px 60px rgba(0,0,0,.5); }
+  .hover-img img { width:100%; height:100%; object-fit:cover; }
+  @media (hover:none) { .hover-img { display:none; } }
+
+  /* Final CTA: photo trail */
+  .trail-img { position:absolute; z-index:0; width:220px; aspect-ratio:3/4; object-fit:cover; border-radius:14px; pointer-events:none; box-shadow:0 20px 40px rgba(0,0,0,.45); }
+  .final { position:relative; overflow:hidden; }
+  .final > *:not(.trail-img) { position:relative; z-index:1; }
 
   /* Barbers */
   .team { padding-block:12vh; }
@@ -132,13 +151,13 @@
   }
   @media (prefers-reduced-motion:reduce) {
     .reveal { opacity:1; transform:none; }
-    .marquee .track, .status.open i { animation:none; }
+    .marquee .track, .status.open i, .glow i, .serif { animation:none; }
     #intro { display:none; }
   }
 </style>
 </head>
 <body>
-<div class="glow" aria-hidden="true"></div>
+<div class="glow" aria-hidden="true"><i></i><i></i><i></i></div>
 <canvas id="gl" aria-hidden="true"></canvas>
 <div class="grain" aria-hidden="true"></div>
 <div id="intro" aria-hidden="true"><span>the cut.</span></div>
@@ -166,12 +185,13 @@
   <section class="prices wrap" id="cennik">
     <div class="eyebrow reveal">Služby</div>
     <h2 class="lines"><span class="line"><span>cenník<span class="serif">.</span></span></span></h2>
+    <div class="hover-img" aria-hidden="true"><img src="img/g02.jpg" alt=""></div>
     <ul class="price-list">
-      <li class="reveal"><span class="name">pánsky strih.<small>strih, umytie, styling</small></span><span class="val">25€</span></li>
-      <li class="reveal"><span class="name">fade.<small>skin / low / mid / high</small></span><span class="val">20€</span></li>
-      <li class="reveal"><span class="name">brada.<small>úprava, kontúry, hot towel</small></span><span class="val"><sub>od</sub>15€</span></li>
-      <li class="reveal"><span class="name">combo.<small>strih + brada</small></span><span class="val"><sub>od</sub>35€</span></li>
-      <li class="reveal"><span class="name">detský strih.<small>pre malých gentlemanov</small></span><span class="val">20€</span></li>
+      <li class="reveal" data-img="img/g02.jpg"><span class="name">pánsky strih.<small>strih, umytie, styling</small></span><span class="val">25€</span></li>
+      <li class="reveal" data-img="img/g04.jpg"><span class="name">fade.<small>skin / low / mid / high</small></span><span class="val">20€</span></li>
+      <li class="reveal" data-img="img/g08.jpg"><span class="name">brada.<small>úprava, kontúry, hot towel</small></span><span class="val"><sub>od</sub>15€</span></li>
+      <li class="reveal" data-img="img/g07.jpg"><span class="name">combo.<small>strih + brada</small></span><span class="val"><sub>od</sub>35€</span></li>
+      <li class="reveal" data-img="img/g06.jpg"><span class="name">detský strih.<small>pre malých gentlemanov</small></span><span class="val">20€</span></li>
     </ul>
   </section>
 
@@ -256,7 +276,6 @@
 <script type="module">
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 
 gsap.registerPlugin(ScrollTrigger);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -315,7 +334,6 @@ const redL = new THREE.PointLight(0xff3333, 30, 20); redL.position.set(3, 1, 3);
 const blueL = new THREE.PointLight(0x3366ff, 30, 20); blueL.position.set(-3, -1, 3); scene.add(blueL);
 
 const chrome = new THREE.MeshPhysicalMaterial({ color: 0xffffff, metalness: 1, roughness: 0.12, clearcoat: 1 });
-const black = new THREE.MeshPhysicalMaterial({ color: 0x0c0c0c, metalness: 0.2, roughness: 0.35, clearcoat: 1, clearcoatRoughness: 0.1 });
 
 // Barber pole: striped core inside a glass tube, chrome caps.
 function makePole() {
@@ -341,35 +359,9 @@ function makePole() {
   return pole;
 }
 
-// Scissors: two mirrored halves pivoting on a screw.
-function makeScissors() {
-  const half = sign => {
-    const g = new THREE.Group();
-    const s = new THREE.Shape();
-    s.moveTo(0, -0.09); s.lineTo(2.3, -0.015); s.quadraticCurveTo(2.45, 0, 2.3, 0.04); s.lineTo(0.2, 0.13); s.quadraticCurveTo(-0.1, 0.12, 0, -0.09);
-    const blade = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: 0.04, bevelEnabled: true, bevelThickness: 0.012, bevelSize: 0.012, bevelSegments: 3, curveSegments: 24 }), chrome);
-    blade.position.z = sign > 0 ? 0.01 : -0.06;
-    const shank = new THREE.Mesh(new RoundedBoxGeometry(0.9, 0.12, 0.07, 3, 0.03), chrome);
-    shank.position.set(-0.45, -0.06 * sign, 0); shank.rotation.z = 0.18 * sign;
-    const loop = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.065, 20, 64), black);
-    loop.scale.set(1.25, 1, 1); loop.position.set(-1.1, -0.3 * sign, 0);
-    const tang = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.03, 12, 32, Math.PI), black);
-    tang.position.set(-1.35, -0.62 * sign, 0); tang.rotation.z = sign > 0 ? Math.PI : 0;
-    g.add(blade, shank, loop, sign > 0 ? tang : new THREE.Group());
-    if (sign < 0) g.scale.y = -1;
-    return g;
-  };
-  const sc = new THREE.Group();
-  const a = half(1), b = half(-1);
-  const screw = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.18, 32), chrome); screw.rotation.x = Math.PI / 2;
-  sc.add(a, b, screw);
-  sc.userData.halves = [a, b];
-  return sc;
-}
-
-const pole = makePole(), scissors = makeScissors();
-pole.scale.setScalar(0.62); scissors.scale.setScalar(0.8);
-const rig = new THREE.Group(); rig.add(pole, scissors); scene.add(rig);
+const pole = makePole();
+pole.scale.setScalar(0.62);
+const rig = new THREE.Group(); rig.add(pole); scene.add(rig);
 
 // ---------- Scroll choreography: one master timeline in scroll pixels ----------
 const v = f => typeof f === "function" ? f() : f;
@@ -378,14 +370,9 @@ const rot = p => ({ x: v(p[3]), y: v(p[4]), z: v(p[5]) });
 const PI = Math.PI, OFF = 7;
 const POLE = {
   hero:  [() => mobile() ? 0 : 3.1, () => mobile() ? 1.7 : 0.25, 0, 0.12, 0, () => mobile() ? 0 : -0.15],
+  price: [() => mobile() ? 0 : 3.3, () => mobile() ? OFF : -0.1, -1, 0.25, PI, () => mobile() ? 0.2 : 0.3],
   gone:  [0, OFF, -2, 0.8, PI * 2, 0],
   final: [() => mobile() ? 0 : -3.3, () => mobile() ? 2.4 : 0, -0.5, 0.1, PI * 3, () => mobile() ? 0 : 0.25],
-};
-const SC = {
-  below: [() => mobile() ? 0 : 2.6, -OFF, 0, 0, 0, 0],
-  price: [() => mobile() ? 0.2 : 2.9, () => mobile() ? 2.6 : 0, 0.5, 0.4, -0.5, 0.7],
-  gone:  [0, OFF, 0, 2, 1, 0],
-  final: [() => mobile() ? 0.3 : 3.1, () => mobile() ? -2.6 : -0.4, 0, 0.6, -0.6, 0.9],
 };
 let master;
 function build() {
@@ -394,12 +381,10 @@ function build() {
   const vh = innerHeight, at = sel => $(sel).offsetTop - vh, total = $("main").offsetHeight - vh;
   const tl = gsap.timeline({ paused: true, defaults: { ease: "power2.inOut", duration: vh, immediateRender: false } });
   const move = (o, a, b, t, d = vh) => tl.fromTo(o.position, pos(a), { ...pos(b), duration: d }, t).fromTo(o.rotation, rot(a), { ...rot(b), duration: d }, t);
-  tl.set(pole.position, pos(POLE.hero), 0).set(pole.rotation, rot(POLE.hero), 0).set(scissors.position, pos(SC.below), 0).set(scissors.rotation, rot(SC.below), 0);
-  move(pole, POLE.hero, POLE.gone, at("#cennik"));
-  move(scissors, SC.below, SC.price, at("#cennik"));
-  move(scissors, SC.price, SC.gone, at("#barberi"));
+  tl.set(pole.position, pos(POLE.hero), 0).set(pole.rotation, rot(POLE.hero), 0);
+  move(pole, POLE.hero, POLE.price, at("#cennik"));
+  move(pole, POLE.price, POLE.gone, at("#barberi"));
   move(pole, POLE.gone, POLE.final, at(".final"));
-  move(scissors, SC.gone, SC.final, at(".final"));
   tl.set({}, {}, total);
   master = tl;
   ScrollTrigger.create({ animation: tl, trigger: "main", start: "top top", end: "bottom bottom", scrub: 1.1 });
@@ -450,6 +435,40 @@ $$(".magnetic").forEach(b => {
   b.addEventListener("pointerleave", () => gsap.to(b, { x: 0, y: 0, duration: 0.8, ease: "elastic.out(1,0.4)" }));
 });
 
+// ---------- Price hover preview ----------
+if (matchMedia("(hover: hover)").matches && !reduced) {
+  const box = $(".hover-img"), img = box.querySelector("img");
+  const hx = gsap.quickTo(box, "x", { duration: 0.6, ease: "power3" }), hy = gsap.quickTo(box, "y", { duration: 0.6, ease: "power3" });
+  $$(".price-list li").forEach(li => {
+    li.addEventListener("pointerenter", () => { img.src = li.dataset.img;
+      gsap.to(box, { opacity: 1, scale: 1, rotate: gsap.utils.random(-6, 6), duration: 0.5, ease: "power3.out" }); });
+    li.addEventListener("pointerleave", () => gsap.to(box, { opacity: 0, scale: 0.85, duration: 0.4 }));
+  });
+  $(".price-list").addEventListener("pointermove", e => { hx(e.clientX + 40); hy(e.clientY - box.offsetHeight / 2); });
+  $$(".price-list li").forEach(li => { const i = new Image(); i.src = li.dataset.img; });
+}
+
+// ---------- Final CTA: haircut photo trail ----------
+(function imageTrail(area, srcs, every = 80, life = 1000) {
+  if (matchMedia("(prefers-reduced-motion: reduce), (hover: none)").matches) return;
+  srcs.forEach(s => { const i = new Image(); i.src = s; });
+  let last = 0, n = 0;
+  area.addEventListener("pointermove", e => {
+    const now = performance.now();
+    if (now - last < every) return;
+    last = now;
+    const r = area.getBoundingClientRect(), im = document.createElement("img");
+    im.src = srcs[n++ % srcs.length]; im.alt = ""; im.className = "trail-img";
+    im.style.left = `${e.clientX - r.left}px`; im.style.top = `${e.clientY - r.top}px`;
+    const rot = (Math.random() * 20 - 10).toFixed(1);
+    area.append(im);
+    im.animate([
+      { opacity: 1, transform: `translate(-50%,-50%) rotate(${rot}deg) scale(1)` },
+      { opacity: 0, transform: `translate(-50%,-50%) rotate(${rot}deg) scale(.6)` },
+    ], { duration: life, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards" }).onfinish = () => im.remove();
+  });
+})($(".final"), Array.from({ length: 12 }, (_, i) => `img/g${String(i + 1).padStart(2, "0")}.jpg`));
+
 // ---------- Render loop ----------
 const mouse = { x: 0, y: 0 };
 addEventListener("pointermove", e => { mouse.x = e.clientX / innerWidth - 0.5; mouse.y = e.clientY / innerHeight - 0.5; });
@@ -460,8 +479,6 @@ renderer.setAnimationLoop(t => {
   if (!reduced) {
     pole.userData.stripes.offset.y -= dt * 0.35;           // classic rising spiral
     pole.rotation.y += dt * 0.25;
-    const snip = 0.05 + 0.32 * Math.abs(Math.sin(scrollY * 0.006 + e * 0.6)); // snips while you scroll
-    scissors.userData.halves[0].rotation.z = snip; scissors.userData.halves[1].rotation.z = -snip;
     rig.rotation.y += (mouse.x * 0.35 - rig.rotation.y) * 0.05;
     rig.rotation.x += (mouse.y * 0.2 - rig.rotation.x) * 0.05;
     rig.position.y = Math.sin(e * 1.1) * 0.06;
