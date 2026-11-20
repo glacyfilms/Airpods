@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AirPods — Concept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#000; --fg:#f5f5f7; --muted:#86868b; --accent:#2997ff;
+          --a:#2f6bff; --b:#9b4dff; --c:#ff4d8d; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html.lenis, html.lenis body { height:auto; }
+  body { background:var(--bg); color:var(--fg); font-family:Inter, -apple-system, system-ui, sans-serif; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+  canvas#gl { position:fixed; inset:0; width:100vw; height:100vh; z-index:0; }
+
+  /* Aurora: three blurred blobs drifting; colors are tweened per section via --a/--b/--c. */
+  .aurora { position:fixed; inset:-20%; z-index:-1; filter:blur(90px) saturate(140%); opacity:.55; pointer-events:none; }
+  .aurora i { position:absolute; width:55vmax; height:55vmax; border-radius:50%; mix-blend-mode:screen; animation:drift 22s ease-in-out infinite alternate; }
+  .aurora i:nth-child(1) { background:radial-gradient(circle, var(--a), transparent 65%); left:5%; top:25%; }
+  .aurora i:nth-child(2) { background:radial-gradient(circle, var(--b), transparent 65%); right:0; top:5%; animation-duration:28s; animation-delay:-8s; }
+  .aurora i:nth-child(3) { background:radial-gradient(circle, var(--c), transparent 65%); left:30%; bottom:-5%; animation-duration:34s; animation-delay:-16s; opacity:.7; }
+  @keyframes drift { to { transform:translate(12vmax,-8vmax) scale(1.25); } }
+  .vignette { position:fixed; inset:0; z-index:-1; pointer-events:none; background:radial-gradient(120% 90% at 50% 50%, transparent 40%, #000 95%); }
+  .grain { position:fixed; inset:0; z-index:2; pointer-events:none; opacity:.06; mix-blend-mode:overlay;
+           background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .cursor { position:fixed; left:0; top:0; width:520px; height:520px; margin:-260px 0 0 -260px; border-radius:50%; z-index:0; pointer-events:none;
+            background:radial-gradient(circle, rgba(140,160,255,.16), transparent 60%); }
+  @media (hover:none) { .cursor { display:none; } }
+
+  nav { position:fixed; top:0; left:0; right:0; z-index:10; display:flex; justify-content:space-between; align-items:center; padding:14px 24px; font-size:13px; backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px); background:rgba(0,0,0,.45); border-bottom:1px solid rgba(255,255,255,.08); }
+  nav b { font-weight:700; letter-spacing:-.01em; }
+  nav a { color:var(--fg); opacity:.75; text-decoration:none; margin-left:22px; transition:opacity .2s; }
+  nav a:hover { opacity:1; }
+  .progress { position:fixed; top:0; left:0; height:2px; width:100%; z-index:11; transform-origin:0 50%; transform:scaleX(0);
+              background:linear-gradient(90deg,var(--a),var(--b),var(--c)); }
+
+  main { position:relative; z-index:1; pointer-events:none; }
+  section { min-height:100vh; display:flex; align-items:center; padding:0 8vw; }
+  section > div { max-width:470px; pointer-events:auto; }
+  .center { justify-content:center; text-align:center; align-items:flex-start; padding-top:16vh; }
+  .center > div { max-width:960px; }
+  .right { justify-content:flex-end; }
+  .bottom { align-items:flex-end; padding-bottom:7vh; }
+  .eyebrow { display:inline-block; font-weight:600; font-size:clamp(14px,1.4vw,19px); margin-bottom:10px; letter-spacing:.01em; }
+  h1 { font-size:clamp(44px,9vw,128px); font-weight:800; letter-spacing:-.045em; line-height:.95; perspective:800px; }
+  h1 .ch { display:inline-block; background:linear-gradient(180deg,#fff 35%,#7d7d84); -webkit-background-clip:text; background-clip:text; color:transparent; transform-origin:50% 100%; }
+  h2 { font-size:clamp(36px,5.5vw,72px); font-weight:700; letter-spacing:-.035em; line-height:1.04; }
+  .w { display:inline-block; overflow:hidden; vertical-align:top; padding-bottom:.08em; }
+  .w > span { display:inline-block; }
+  p { color:var(--muted); font-size:clamp(17px,1.5vw,21px); line-height:1.45; margin-top:18px; font-weight:500; }
+  p strong { color:var(--fg); }
+  .grad, .eyebrow { background:linear-gradient(90deg,#4f9bff,#b26bff,#ff6b9a,#4f9bff); background-size:300% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; animation:shimmer 8s linear infinite; }
+  @keyframes shimmer { to { background-position:-300% 0; } }
+  .stats { display:flex; gap:36px; margin-top:32px; }
+  .stats div b { display:block; font-size:clamp(32px,4vw,52px); font-weight:700; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+  .stats div span { color:var(--muted); font-size:14px; }
+
+  .marquee { min-height:auto; padding:12vh 0; overflow:hidden; display:block; }
+  .marquee div { max-width:none; white-space:nowrap; font-size:clamp(80px,16vw,240px); font-weight:900; letter-spacing:-.05em; line-height:1; pointer-events:none; }
+  .marquee .row1 { color:transparent; -webkit-text-stroke:1.5px rgba(255,255,255,.22); }
+  .marquee .row2 { background:linear-gradient(90deg,#4f9bff,#b26bff,#ff6b9a,#ffb36b); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+  /* Exploded: tall track, copy sticks while the scroll explodes the model. */
+  .explode { min-height:360vh; display:block; padding:0; }
+  .explode .stick { position:sticky; top:0; height:100vh; max-width:none; display:flex; align-items:flex-end; justify-content:space-between; padding:0 8vw 9vh; }
+  .explode .copy { max-width:420px; }
+  .steps { position:relative; height:5.5em; margin-top:14px; }
+  .steps p { position:absolute; inset:0; margin:0; opacity:0; }
+  .steps p b { display:block; color:var(--fg); font-size:clamp(20px,2vw,26px); letter-spacing:-.02em; margin-bottom:4px; }
+  .meter { width:min(220px,30vw); height:2px; background:rgba(255,255,255,.12); border-radius:2px; overflow:hidden; align-self:flex-end; margin-bottom:12px; }
+  .meter i { display:block; height:100%; width:100%; transform-origin:0 50%; transform:scaleX(0); background:linear-gradient(90deg,var(--a),var(--b),var(--c)); }
+
+  .swatches { display:flex; gap:14px; justify-content:center; margin-top:28px; }
+  .swatches button { width:34px; height:34px; border-radius:50%; border:2px solid transparent; outline:2px solid rgba(255,255,255,.15); outline-offset:3px; cursor:pointer; transition:transform .25s cubic-bezier(.3,1.6,.5,1), outline-color .2s; }
+  .swatches button:hover { transform:scale(1.15); }
+  .swatches button[aria-pressed="true"] { outline-color:#fff; }
+  .swatches button:focus-visible { outline-color:var(--accent); }
+  .swatch-name { color:var(--fg); margin-top:14px; font-size:15px; min-height:1.2em; }
+  .cta { position:relative; display:inline-block; margin-top:30px; padding:14px 30px; border-radius:980px; color:#fff; text-decoration:none; font-weight:600; font-size:17px; isolation:isolate;
+         background:linear-gradient(90deg,#2f6bff,#9b4dff,#ff4d8d,#2f6bff); background-size:300% 100%; animation:shimmer 6s linear infinite; }
+  .cta::after { content:""; position:absolute; inset:0; border-radius:inherit; z-index:-1; background:inherit; filter:blur(18px); opacity:.6; }
+  .cta.ghost { background:none; animation:none; color:var(--fg); box-shadow:inset 0 0 0 1px rgba(255,255,255,.25); margin-left:10px; }
+  .cta.ghost::after { display:none; }
+  .cta:focus-visible { outline:2px solid #fff; outline-offset:4px; }
+  footer { position:relative; z-index:1; text-align:center; color:var(--muted); font-size:12px; padding:40px 24px; border-top:1px solid rgba(255,255,255,.08); background:#000; }
+
+  #loader { position:fixed; inset:0; z-index:20; background:#000; display:grid; place-items:center; transition:opacity .9s, visibility .9s; }
+  #loader div { width:180px; height:2px; background:#222; border-radius:2px; overflow:hidden; }
+  #loader i { display:block; height:100%; width:0; background:linear-gradient(90deg,var(--a),var(--b),var(--c)); transition:width .2s; }
+  #loader.done { opacity:0; visibility:hidden; }
+  .reveal { opacity:0; }
+
+  @media (max-width:760px) {
+    section, .right { justify-content:center; text-align:center; align-items:flex-end; padding:0 16px 14vh; }
+    .center { align-items:flex-start; padding-top:14vh; }
+    .stats { justify-content:center; }
+    nav a:not(:last-child) { display:none; }
+    .explode .stick { flex-direction:column; align-items:center; justify-content:flex-end; text-align:center; padding:0 16px 7vh; }
+    .meter { align-self:center; margin:16px 0 0; }
+    .cta.ghost { margin-left:0; }
+  }
+  @media (prefers-reduced-motion:reduce) {
+    .reveal { opacity:1; }
+    .aurora i, .grad, .eyebrow, .cta { animation:none; }
+  }
+</style>
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+<div class="vignette" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"></div>
+<canvas id="gl" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+<div class="progress" aria-hidden="true"></div>
+<div id="loader" role="progressbar" aria-label="Loading 3D models"><div><i id="bar"></i></div></div>
+
+<nav><b>AirPods</b><span><a href="#pro">Pro 3</a><a href="#max">Max</a><a href="#inside">Inside</a><a href="#buy">Buy</a></span></nav>
+
+<main>
+  <section class="center" id="pro" data-theme="#2f6bff,#6a4dff,#00c2ff"><div>
+    <div class="eyebrow hero-in">New</div>
+    <h1 class="chars">AirPods Pro 3</h1>
+    <p class="hero-in">The world, <strong>on mute.</strong> Your music, unbelievably loud and clear.</p>
+  </div></section>
+
+  <section data-theme="#1e40ff,#00b3ff,#6a4dff"><div class="reveal">
+    <div class="eyebrow">Active Noise Cancellation</div>
+    <h2 class="words">Silence, <span class="grad">engineered.</span></h2>
+    <p>Microphones listen to the world around you thousands of times a second and quietly cancel it out. Transparency mode lets it back in with one press.</p>
+  </div></section>
+
+  <section class="right" data-theme="#ff2d55,#9b4dff,#ff8a3d"><div class="reveal">
+    <div class="eyebrow">Health</div>
+    <h2 class="words">Your heartbeat. In your ear.</h2>
+    <p>Built-in sensors track heart rate during workouts, so you can leave the watch at home.</p>
+    <div class="stats"><div><b data-count="30">0</b><span>hrs with case</span></div><div><b data-count="8">0</b><span>hrs listening</span></div></div>
+  </div></section>
+
+  <section class="marquee" aria-hidden="true" data-theme="#9b4dff,#ff4d8d,#2f6bff">
+    <div class="row1">Pro. Max. Pure sound. Pro. Max. Pure sound.</div>
+    <div class="row2">Hear everything. Hear nothing. Hear everything.</div>
+  </section>
+
+  <section class="center" id="max" data-theme="#7b5cff,#ff4d8d,#3d7bff"><div class="reveal">
+    <div class="eyebrow">Over-ear</div>
+    <h1 class="chars">AirPods Max</h1>
+    <p>Computational audio. <strong>Uncompromised.</strong></p>
+  </div></section>
+
+  <section class="explode" id="inside" data-theme="#00c2ff,#7b5cff,#ff8a3d"><div class="stick">
+    <div class="copy">
+      <div class="eyebrow">Inside</div>
+      <h2 class="words">Every layer, <span class="grad">tuned.</span></h2>
+      <div class="steps">
+        <p><b>Memory-foam cushion</b>Acoustically engineered to seal out the world.</p>
+        <p><b>Custom dynamic driver</b>Rich bass and crisp highs, without distortion.</p>
+        <p><b>Precision-machined cup</b>Aluminum shell around a stack of sensors and mics.</p>
+      </div>
+    </div>
+    <div class="meter" aria-hidden="true"><i></i></div>
+  </div></section>
+
+  <section class="center bottom" data-theme="#ff8a3d,#ff4d8d,#9b4dff"><div class="reveal">
+    <h2 class="words">Pick your <span class="grad">color.</span></h2>
+    <div class="swatches" role="group" aria-label="Color">
+      <button style="background:#d9d6d0" data-c="#ffffff" data-n="Starlight" aria-pressed="true" aria-label="Starlight"></button>
+      <button style="background:#2e2f33" data-c="#4a4c55" data-n="Midnight" aria-pressed="false" aria-label="Midnight"></button>
+      <button style="background:#6f8fb5" data-c="#8fb4e6" data-n="Blue" aria-pressed="false" aria-label="Blue"></button>
+      <button style="background:#c48c6a" data-c="#ffc6a3" data-n="Orange" aria-pressed="false" aria-label="Orange"></button>
+      <button style="background:#9c86c9" data-c="#c7b0ff" data-n="Purple" aria-pressed="false" aria-label="Purple"></button>
+    </div>
+    <div class="swatch-name" id="swatchName" aria-live="polite">Starlight</div>
+  </div></section>
+
+  <section class="center" id="buy" data-theme="#2f6bff,#9b4dff,#ff4d8d"><div class="reveal">
+    <h2 class="words">Hear the <span class="grad">difference.</span></h2>
+    <p>Two ways to listen. One unmistakable sound.</p>
+    <a class="cta magnetic" href="#pro">Buy</a><a class="cta ghost magnetic" href="#inside">Look inside ›</a>
+  </div></section>
+</main>
+
+<footer>Fan concept. Not affiliated with or endorsed by Apple Inc. AirPods is a trademark of Apple Inc.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+
+gsap.registerPlugin(ScrollTrigger);
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+
+// ---------- Smooth scroll ----------
+let lenis;
+if (!reduced) {
+  lenis = new Lenis({ lerp: 0.09 });
+  lenis.on("scroll", ScrollTrigger.update);
+  gsap.ticker.add(t => lenis.raf(t * 1000));
+  gsap.ticker.lagSmoothing(0);
+}
+$$('a[href^="#"]').forEach(a => a.addEventListener("click", e => {
+  e.preventDefault();
+  lenis ? lenis.scrollTo(a.getAttribute("href"), { duration: 1.8 }) : $(a.getAttribute("href")).scrollIntoView();
+}));
+
+// ---------- Text splitting ----------
+$$(".chars").forEach(h => {
+  h.setAttribute("aria-label", h.textContent);
+  h.innerHTML = [...h.textContent].map(c => `<span class="ch" aria-hidden="true">${c === " " ? "&nbsp;" : c}</span>`).join("");
+});
+// Words: text nodes split per word; child elements (e.g. .grad) stay whole.
+$$(".words").forEach(h => {
+  const parts = [];
+  h.childNodes.forEach(n => {
+    if (n.nodeType === 3) n.textContent.split(/(\s+)/).forEach(t => parts.push(t.trim() ? `<span class="w"><span>${t}</span></span>` : t));
+    else parts.push(`<span class="w"><span>${n.outerHTML}</span></span>`);
+  });
+  h.innerHTML = parts.join("");
+});
+
+// ---------- Renderer ----------
+const renderer = new THREE.WebGLRenderer({ canvas: $("#gl"), antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.9;
+const key = new THREE.DirectionalLight(0xffffff, 2.5); key.position.set(3, 4, 5); scene.add(key);
+const rimA = new THREE.DirectionalLight(0x6688ff, 4); rimA.position.set(-4, 1, -3); scene.add(rimA);
+const rimB = new THREE.DirectionalLight(0xff66aa, 3); rimB.position.set(4, -1, -3); scene.add(rimB);
+
+const camera = new THREE.PerspectiveCamera(32, innerWidth / innerHeight, 0.1, 100);
+// Narrow screens: pull camera back so models fit width.
+const camZ = () => Math.max(5, 4.2 / (innerWidth / innerHeight));
+camera.position.set(0, 0, camZ());
+
+const manager = new THREE.LoadingManager();
+manager.onProgress = (_, l, t) => $("#bar").style.width = (l / t * 100) + "%";
+const loader = new GLTFLoader(manager).setMeshoptDecoder(MeshoptDecoder);
+
+// Wrap a model in a pivot centered at origin, scaled so its diagonal = size.
+function fit(obj, size) {
+  const box = new THREE.Box3().setFromObject(obj);
+  const s = size / box.getSize(new THREE.Vector3()).length();
+  obj.scale.multiplyScalar(s);
+  obj.position.sub(box.getCenter(new THREE.Vector3()).multiplyScalar(s));
+  const pivot = new THREE.Group(); pivot.add(obj); return pivot;
+}
+
+const [proG, maxG] = await Promise.all([
+  loader.loadAsync("models/airpods-pro-3.glb"),
+  loader.loadAsync("models/airpods-max.glb"),
+]);
+const pro = fit(proG.scene, 2.2), max = fit(maxG.scene, 2.5);
+const rig = new THREE.Group(); scene.add(rig); rig.add(pro, max);
+let maxMat; maxG.scene.traverse(o => { if (o.isMesh) maxMat = o.material; });
+$("#loader").classList.add("done");
+
+const mobile = () => innerWidth < 760;
+const X = () => mobile() ? 0 : 1.25;
+const Y = () => mobile() ? 1.1 : 0;
+const OFF = 5; // off-screen y
+
+// ---------- Hero intro ----------
+pro.position.set(0, -0.62, 0); pro.rotation.set(0.25, -0.4, 0);
+max.position.set(0, -OFF, 0); max.rotation.set(0.1, 0.6, 0);
+if (!reduced) {
+  gsap.from(pro.position, { z: -6, y: -2, duration: 2.2, ease: "expo.out" });
+  gsap.from(pro.rotation, { y: -Math.PI * 2.4, x: 1, duration: 2.6, ease: "expo.out" });
+  gsap.from("#pro .ch", { yPercent: 110, rotateX: -90, opacity: 0, stagger: 0.035, duration: 1.2, ease: "expo.out", delay: 0.25 });
+  gsap.from(".hero-in", { opacity: 0, y: 24, filter: "blur(10px)", stagger: 0.15, duration: 1.2, ease: "power3.out", delay: 0.6 });
+}
+
+// ---------- Scroll choreography ----------
+// One master timeline in scroll pixels, so every model prop has exactly one owner and jumps can't desync.
+const S = $$("main > section");
+// pose = [x, y, z, rx, ry, rz]; entries may be functions (re-read on rebuild).
+const v = f => typeof f === "function" ? f() : f;
+const pos = p => ({ x: v(p[0]), y: v(p[1]), z: v(p[2]) });
+const rot = p => ({ x: v(p[3]), y: v(p[4]), z: v(p[5]) });
+const PI = Math.PI;
+const P = [
+  [0, -0.62, 0, 0.25, -0.4, 0],
+  [X, Y, 0, 0.1, PI * 0.9, 0],
+  [() => -X(), Y, 0, 0.5, PI * 2.1, 0.2],
+  [0, () => mobile() ? 0.6 : 0.1, 0.6, -0.3, PI * 3, 0],  // marquee: drifts toward camera
+  [0, OFF, 0, -1, PI * 3, 0],
+];
+const M = {
+  below: [0, -OFF, 0, 0.1, 0.6, 0],
+  hero:  [0, -0.62, 0, 0.1, -0.3, 0],
+  above: [0, OFF, 0, -0.8, -0.3, 0],
+  color: [0, () => mobile() ? -0.5 : 0.42, 0, 0.15, PI * 2 - 0.5, 0],
+  buy:   [0, () => mobile() ? -1 : -0.8, -0.8, 0.15, PI * 2 + 0.6, 0],
+};
+const ez = () => mobile() ? PI / 2 : 0;
+const ex = () => mobile() ? 0 : 0.35, ey = () => mobile() ? 0.9 : 0.3;
+const E = {
+  below: [ex, -OFF, 0, 0.4, -1.6, ez],
+  in:    [ex, ey, 0, 0.25, -0.55, ez],
+  out:   [ex, ey, 0, 0.1, 0.55, ez],
+  above: [ex, OFF, 0, -0.4, 0.8, ez],
+};
+
+const exp = new THREE.Group(); rig.add(exp);
+const parts = [];
+const state = { p: 0 };
+function setExplode(p) {
+  const n = parts.length;
+  parts.forEach(({ o, x }, i) => {
+    // Outer layers leave first, middle ones last.
+    const d = Math.abs(i - (n - 1) / 2) / ((n - 1) / 2);
+    const local = gsap.utils.clamp(0, 1, (p - (1 - d) * 0.35) / 0.65);
+    o.position.x = x * (0.12 + 0.88 * gsap.parseEase("power3.inOut")(local));
+  });
+}
+
+let master;
+function build() {
+  const progress = master ? master.scrollTrigger.progress : 0;
+  if (master) { master.scrollTrigger.kill(); master.kill(); }
+  const vh = innerHeight;
+  const total = $("main").offsetHeight - vh;
+  const enter = i => S[i].offsetTop - vh;   // section i scrolls from bottom edge to top edge
+  const tl = gsap.timeline({ defaults: { ease: "power2.inOut", duration: vh, immediateRender: false }, paused: true });
+  const move = (o, a, b, at, dur = vh) => tl.fromTo(o.position, pos(a), { ...pos(b), duration: dur }, at).fromTo(o.rotation, rot(a), { ...rot(b), duration: dur }, at);
+  tl.set(pro.position, pos(P[0]), 0).set(pro.rotation, rot(P[0]), 0)
+    .set(max.position, pos(M.below), 0).set(max.rotation, rot(M.below), 0)
+    .set(exp.position, pos(E.below), 0).set(exp.rotation, rot(E.below), 0).set(state, { p: 0 }, 0);
+  for (let i = 1; i <= 4; i++) move(pro, P[i - 1], P[i], enter(i));
+  move(max, M.below, M.hero, enter(4));
+  move(max, M.hero, M.above, enter(5));
+  move(exp, E.below, E.in, enter(5));
+  const exStart = S[5].offsetTop, exDur = S[5].offsetHeight - vh;
+  move(exp, E.in, E.out, exStart, exDur);
+  tl.fromTo(state, { p: 0 }, { p: 1, duration: exDur, ease: "none", onUpdate: () => setExplode(state.p) }, exStart);
+  move(exp, E.out, E.above, enter(6));
+  move(max, M.below, M.color, enter(6));
+  move(max, M.color, M.buy, enter(7));
+  tl.set({}, {}, total);
+  master = tl;
+  ScrollTrigger.create({ animation: tl, trigger: "main", start: "top top", end: "bottom bottom", scrub: 1.2 });
+  tl.progress(progress);
+}
+build();
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(build, 200); });
+
+gsap.to(".marquee .row1", { xPercent: -30, ease: "none", scrollTrigger: { trigger: ".marquee", scrub: true } });
+gsap.fromTo(".marquee .row2", { xPercent: -30 }, { xPercent: 0, ease: "none", scrollTrigger: { trigger: ".marquee", scrub: true } });
+
+// Captions + meter for the exploded track (DOM only).
+const steps = $$(".steps p");
+ScrollTrigger.create({ trigger: S[5], start: "top top", end: "bottom bottom", onUpdate: st => {
+  $(".meter i").style.transform = `scaleX(${st.progress})`;
+  const k = Math.min(steps.length - 1, Math.floor(st.progress * steps.length));
+  steps.forEach((s, i) => gsap.to(s, { opacity: i === k ? 1 : 0, y: i === k ? 0 : (i < k ? -12 : 12), duration: 0.4, overwrite: true }));
+} });
+
+// Exploded model is 27 MB: load after first paint.
+new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync("models/airpods-max-exploded-v4.glb").then(g => {
+  const pivot = fit(g.scene, 3.0);
+  // Parts ship laid out exploded along local x; keep each exploded x and scale it toward 0 to assemble.
+  g.scene.traverse(o => { if (o.isMesh) parts.push({ o, x: o.position.x }); });
+  parts.sort((a, b) => a.x - b.x);
+  exp.add(pivot);
+  setExplode(state.p);
+}).catch(e => console.error("Exploded model failed to load", e));
+
+// ---------- Color ----------
+const swatches = $$(".swatches button");
+swatches.forEach(b => b.addEventListener("click", () => {
+  swatches.forEach(s => s.setAttribute("aria-pressed", String(s === b)));
+  $("#swatchName").textContent = b.dataset.n;
+  const c = new THREE.Color(b.dataset.c);
+  gsap.to(maxMat.color, { r: c.r, g: c.g, b: c.b, duration: 0.8, ease: "power2.out" });
+  gsap.fromTo(max.rotation, { z: 0 }, { z: 0.1, yoyo: true, repeat: 1, duration: 0.35, ease: "power2.out", immediateRender: false });
+  gsap.to(":root", { "--a": b.style.background, duration: 1 });
+}));
+
+// ---------- Section themes: aurora colors + text reveals ----------
+S.forEach(sec => {
+  const [a, b, c] = (sec.dataset.theme || "").split(",");
+  if (a) ScrollTrigger.create({ trigger: sec, start: "top 55%", end: "bottom 55%",
+    onToggle: st => st.isActive && gsap.to(":root", { "--a": a, "--b": b, "--c": c, duration: 1.4, ease: "power2.out" }) });
+});
+$$(".reveal").forEach(el => {
+  const tl = gsap.timeline({ scrollTrigger: { trigger: el, start: "top 80%", toggleActions: "play none none reverse" } });
+  tl.to(el, { opacity: 1, duration: 0.01 });
+  const w = el.querySelectorAll(".w > span, .ch");
+  if (w.length) tl.from(w, { yPercent: 115, rotate: 4, stagger: 0.06, duration: 1, ease: "expo.out" }, 0);
+  tl.from(el.querySelectorAll(".eyebrow, p, .stats, .swatches, .swatch-name, .cta"), { opacity: 0, y: 30, filter: "blur(8px)", stagger: 0.08, duration: 1, ease: "power3.out" }, 0.15);
+});
+gsap.from("#inside .w > span", { yPercent: 115, stagger: 0.06, duration: 1, ease: "expo.out", scrollTrigger: { trigger: "#inside", start: "top 40%" } });
+$$("[data-count]").forEach(el => gsap.to(el, { textContent: +el.dataset.count, snap: { textContent: 1 }, duration: 1.6, ease: "power2.out",
+  scrollTrigger: { trigger: el, start: "top 85%" } }));
+gsap.to(".progress", { scaleX: 1, ease: "none", scrollTrigger: { trigger: "main", start: "top top", end: "bottom bottom", scrub: true } });
+
+// ---------- Pointer: parallax, cursor glow, magnetic buttons ----------
+const mouse = { x: 0, y: 0 };
+const cx = gsap.quickTo(".cursor", "x", { duration: 0.6, ease: "power3" }), cy = gsap.quickTo(".cursor", "y", { duration: 0.6, ease: "power3" });
+addEventListener("pointermove", e => { mouse.x = e.clientX / innerWidth - 0.5; mouse.y = e.clientY / innerHeight - 0.5; cx(e.clientX); cy(e.clientY); });
+$$(".magnetic").forEach(b => {
+  b.addEventListener("pointermove", e => { const r = b.getBoundingClientRect();
+    gsap.to(b, { x: (e.clientX - r.left - r.width / 2) * 0.35, y: (e.clientY - r.top - r.height / 2) * 0.35, duration: 0.4 }); });
+  b.addEventListener("pointerleave", () => gsap.to(b, { x: 0, y: 0, duration: 0.7, ease: "elastic.out(1,0.4)" }));
+});
+
+const timer = new THREE.Timer();
+renderer.setAnimationLoop(t => {
+  timer.update(t);
+  const e = timer.getElapsed();
+  if (!reduced) {
+    rig.rotation.y += (mouse.x * 0.5 - rig.rotation.y) * 0.05;
+    rig.rotation.x += (mouse.y * 0.3 - rig.rotation.x) * 0.05;
+    rig.position.y = Math.sin(e * 1.2) * 0.04;
+    rimA.position.x = Math.sin(e * 0.4) * 5; rimB.position.x = Math.cos(e * 0.4) * 5;
+  }
+  renderer.render(scene, camera);
+});
+
+addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight; camera.position.z = camZ(); camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
